@@ -130,4 +130,72 @@ import { Link, useStaticQuery, graphql } from 'gatsby'
 <header>{data.site.siteMetadata.title}</header>
 ```
 
-https://www.gatsbyjs.com/docs/tutorial/part-4/#queries-in-page-components-create-a-blog-page-with-a-list-of-post-filenames
+
+# Create some MDX blog posts
+
+サイトでは、各ブログ投稿をプロジェクトのフォルダ内に個別のファイルとして保存します。
+
+* プロジェクトフォルダの最上位にblogという名前の新しいディレクトリを作成します。
+* 投稿ごとに1つです。拡張子が.mdxである限り、名前は関係ありません。 
+* ローカルファイルシステムにいくつかの投稿が保存されたので、次にそれらのファイルをGatsbyデータレイヤーにプルします。そのためには、gatsby-source-filesystemというプラグインを使用します。
+
+gatsby-config.jsファイルでgatsby-source-filesystemを構成します。 gatsby-source-filesystemにはいくつかの追加の構成オプションが必要なため、文字列の代わりに構成オブジェクトを使用します。 以下のコード例は、ブログディレクトリからファイルを「調達」する方法（つまり、ファイルをデータレイヤーに追加する方法）を示しています。
+
+```
+module.exports = {
+  siteMetadata: {
+    title: "My First Gatsby Site",
+  },
+  plugins: [
+    "gatsby-plugin-image",
+    "gatsby-plugin-sharp",
+    {
+      resolve: "gatsby-source-filesystem",
+      options: {
+        name: `blog`,
+        path: `${__dirname}/blog`,
+      }
+    },
+  ],
+};
+```
+
+ファイル名取得
+```
+query MyQuery {
+  allFile {
+    nodes {
+      name
+    }
+  }
+}
+```
+
+# ページクエリを使用して、投稿ファイル名のリストをブログページにプルします
+
+```
+const BlogPage = ({ data }) => {
+  return (
+    <Layout pageTitle="My Blog Posts">
+      <ul>
+        {
+          data.allFile.nodes.map(node => (
+            <li key={node.name}>
+              {node.name}
+            </li>
+          ))
+        }
+      </ul>
+    </Layout>
+  )
+}
+export const query = graphql`
+  query {
+    allFile {
+      nodes {
+        name
+      }
+    }
+  }
+`
+```
