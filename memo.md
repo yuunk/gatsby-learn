@@ -199,3 +199,72 @@ export const query = graphql`
   }
 `
 ```
+
+# サイトでデータを使用するための一般的なプロセス
+
+* ソースプラグインを追加して、GraphQLデータレイヤーにデータを追加します。
+* GraphiQLを使用して、データレイヤーから必要なデータで応答するクエリを設計します。
+* Add the query into your component.
+  * 「ビルディングブロック」コンポーネントにはuseStaticQueryを使用します。
+* コンポーネントの応答からのデータを使用します。
+
+
+# Transform Data to Use MDX
+
+トランスフォーマープラグインは、ノードをあるタイプから別のタイプに変換します。 たとえば、gatsby-plugin-mdxプラグインは、拡張子が.mdxのファイルノードをMDXノードに変換します。MDXノードには、GraphQLを使用してクエリできるさまざまなフィールドのセットがあります。 Transformerプラグインを使用すると、ソースプラグインによって作成されたノードの生データを操作できるため、必要な構造または形式にデータを取り込むことができます。
+
+# gatsby-plugin-mdx
+
+ブログページに投稿をレンダリングするには、いくつかの異なる手順を実行します。
+1. gatsby-plugin-mdxトランスフォーマープラグインとその依存関係をインストールして構成します。
+1. gatsby-plugin-mdxのallMdxフィールドを使用する
+1. gatsby-plugin-mdxのMDXRendererコンポーネントを使用して、ブログページのJSXで投稿のMDXコンテンツをレンダリングします。
+
+```
+npm install gatsby-plugin-mdx @mdx-js/mdx@v1 @mdx-js/react@v1
+```
+
+gatsyby-config
+```
+  plugins: [
+    "gatsby-plugin-image",
+    "gatsby-plugin-sharp",
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: `blog`,
+        path: `${__dirname}/blog/`,
+      },
+    },
+    "gatsby-plugin-mdx", // add
+  ],
+```
+
+# under scoree3つ
+
+[並べ替え]で、[フィールド]引数を確認し、ドロップダウンを使用して、データノードを並べ替えるフィールドを選択します。この場合、それはfrontmatter ___ date（3つのアンダースコア付き）になります。
+
+
+```
+query MyQuery {
+  allMdx(sort: {fields: frontmatter___date, order: DESC}) {
+    nodes {
+      frontmatter {
+        date(formatString: "MMMM D, YYYY")
+        title
+      }
+      id
+      body
+    }
+  }
+}
+```
+
+
+MDXブログ投稿の実際のコンテンツをレンダリングすることです。これを行うには、MDXRendererと呼ばれるgatsby-plugin-mdxのコンポーネントを使用する必要があります
+
+```
+<MDXRenderer>
+  {node.body}
+</MDXRenderer>
+```
