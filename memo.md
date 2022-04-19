@@ -268,3 +268,111 @@ MDXブログ投稿の実際のコンテンツをレンダリングすること�
   {node.body}
 </MDXRenderer>
 ```
+
+# プログラムでページを作成する
+
+## GatsbyのファイルシステムルートAPIを使用して動的に新しいルートを作成する
+
+ただし、1つのページコンポーネントを使用して複数のページを作成することもできます。 すべてのコンテンツをハードコーディングする代わりに、ページの基本構造の概要を示すテンプレートを作成すると、Gatsbyはビルド時に各ページの特定のデータを動的に追加できます。 これを行うには、GatsbyのファイルシステムルートAPIを使用します。これにより、ページファイルに特別な構文で名前を付けることにより、ルートを動的に作成できます。
+
+## ブログ投稿ページテンプレートを作成する
+
+src/pages/{mdx.slug}.js ファイル作成
+
+src/page/blog/{mdx.slug}.js 設置することで
+
+```js
+import * as React from 'react'
+import { graphql } from 'gatsby'
+import Layout from '../../components/layout'
+import { MDXRenderer } from 'gatsby-plugin-mdx'
+
+const BlogPost = ({ data }) => {
+  return (
+    <Layout pageTitle={data.mdx.frontmatter.title}>
+      <p>{data.mdx.frontmatter.date}</p>
+      <MDXRenderer>
+        {data.mdx.body}
+      </MDXRenderer>
+    </Layout>
+  )
+}
+
+export const query = graphql`
+  query ($id: String) {
+    mdx(id: {eq: $id}) {
+      frontmatter {
+        title
+        date(formatString: "MMMM D, YYYY")
+      }
+      body
+    }
+  }
+`
+
+export default BlogPost
+```
+
+## link
+
+```js
+<h2>
+  <Link to={`/blog/${node.slug}`}>
+    {node.frontmatter.title}
+  </Link>
+</h2>
+```
+
+## まとめ
+
+* ファイルシステムルートは、src内のファイルでのみ機能します
+* ファイルに{nodeType.field} .jsという名前を付けます。ここで、nodeTypeはページを作成するノードのタイプであり、fieldはで使用するノードタイプのデータフィールドです。そのページのURL。
+* クエリ変数を使用すると、同じGraphQLクエリに異なるデータ値を渡すことができます。これらをフィールド引数と組み合わせて、特定のノードに関するデータのみを取得できます。
+* クエリ変数は、ページクエリでのみ使用できます。
+
+# データから動的画像を追加する
+
+GatsbyImageコンポーネントを使用して、データから動的に画像を作成します。
+
+mdxに画像
+example
+```
+hero_image: the relative path to the hero image file for that post
+hero_image_alt: a short description of the image, to be used as alternative text for screen readers or in case the image doesn’t load correctly
+hero_image_credit_text: the text to display to give the photographer credit for the hero image
+hero_image_credit_link: a link to the page where your hero image was downloaded from
+```
+```js
+title: "My First Post"
+date: "2021-07-23"
+hero_image: "./christopher-ayme-ocZ-_Y7-Ptg-unsplash.jpg"
+hero_image_alt: "A gray pitbull relaxing on the sidewalk with its tongue hanging out"
+hero_image_credit_text: "Christopher Ayme"
+hero_image_credit_link: "https://unsplash.com/photos/ocZ-_Y7-Ptg"
+```
+
+* GatsbyImageコンポーネントを使用するには、gatsby-transformer-sharpトランスフォーマープラグインをサイトに追加する必要があります。
+
+## Add hero image using GatsbyImage component
+
+```js
+export const query = graphql`
+  query($id: String) {
+    mdx(id: {eq: $id}) {
+      body
+      frontmatter {
+        title
+        date(formatString: "MMMM DD, YYYY")
+        hero_image_alt
+        hero_image_credit_link
+        hero_image_credit_text
+        hero_image {
+          childImageSharp {
+            gatsbyImageData
+          }
+        }
+      }
+    }
+  }
+`
+```
